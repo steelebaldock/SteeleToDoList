@@ -35,5 +35,20 @@ def deletebytask(taskval):
 
 # Start Main Window
 def main_window():
+# Add and Delete functions go here. I guess they are here as they do not need to be globally defined.
+    def add():
+        if(len(addtask.get()) == 0):
+            messagebox.showerror("ERROR", "No Data Available\nPlease add a Task")
+        else:
+            insertdata(addtask.get())
+            addtask.delete(0, END)
+            populate()
+
+    def deletetask(event):
+        deletebytask(listbox.get(ANCHOR))
+        populate()
+
+
+
     main = tkinter.Tk()
 
