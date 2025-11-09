@@ -33,4 +33,7 @@ def deletebytask(taskval):
     conn.execute(query, (taskval,))
     conn.commit()
 
+# Start Main Window
+def main_window():
+    main = tkinter.Tk()
 
