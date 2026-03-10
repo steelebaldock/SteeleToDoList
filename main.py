@@ -1,54 +1,69 @@
-# Import modules needed tkinter and sqlite3
+import tkinter as tk
+from tkinter import ttk
+import pickle
+import os
 
-import tkinter
-from tkinter import *
-from tkinter import messagebox
+class TodoApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Steele's Todo List")
+        self.root.geometry("800x600")
+        self.root.configure(bg='#f0f0f0')
 
-import sqlite3
+        # File path for the pickle file
+        self.save_file = "todo_list.pkl"
 
-# Setup Database - this is going to be stored locally, future upgrade, point this to an WebDAV file structure.
-# Setup filename for database and connect sqlite3 to it.
+        # Load existing todos or start with empty list
+        self.todos = self.load_todos()
 
-conn = sqlite3.connect('steeletodo.db')
+        # Create main frame
+        self.main_frame = ttk.Frame(root, padding="10")
+        self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        root.columnconfigure(0, weight=1)
+        root.rowconfigure(0, weight=1)
 
-# Check if the database already exists and has data in it. If it is empty or does not exist, set it up and add something to it.
-conn.execute('''CREATE TABLE IF NOT EXISTS todo(id INTEGER PRIMARY KEY, task TEXT NOT NULL);''')
+        # Save on window close
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-# Define our Global Functions
-# Show our todo List
-def show():
-    query = "SELECT * FROM todo;"
-    conn.execute(query,(task,))
-    return conn.execute(query)
+    def load_todos(self):
+        """Load todos from pickle file, return empty list if file doesn't exist."""
+        if os.path.exists(self.save_file):
+            with open(self.save_file, "rb") as f:
+                return pickle.load(f)
+        return []
 
-#Add a new item to the todo list
-def insertdata(task):
-    query = "INSERT INTO todo(task) VALUES(?);"
-    conn.execute(query, (task,))
-    conn.commit()
+    def save_todos(self):
+        """Save the current todos list to a pickle file."""
+        with open(self.save_file, "wb") as f:
+            pickle.dump(self.todos, f)
 
-#Delete a task from the todo List
-def deletebytask(taskval):
-    query = "DELETE FROM todo WHERE task =?;"
-    conn.execute(query, (taskval,))
-    conn.commit()
+    def add_todo(self, task: str):
+        """Add a new task and save."""
+        self.todos.append({"task": task, "done": False})
+        self.save_todos()
 
-# Start Main Window
-def main_window():
-# Add and Delete functions go here. I guess they are here as they do not need to be globally defined.
-    def add():
-        if(len(addtask.get()) == 0):
-            messagebox.showerror("ERROR", "No Data Available\nPlease add a Task")
-        else:
-            insertdata(addtask.get())
-            addtask.delete(0, END)
-            populate()
+    def remove_todo(self, index: int):
+        """Remove a task by index and save."""
+        if 0 <= index < len(self.todos):
+            self.todos.pop(index)
+            self.save_todos()
 
-    def deletetask(event):
-        deletebytask(listbox.get(ANCHOR))
-        populate()
+    def toggle_todo(self, index: int):
+        """Mark a task as done/undone and save."""
+        if 0 <= index < len(self.todos):
+            self.todos[index]["done"] = not self.todos[index]["done"]
+            self.save_todos()
+
+    def on_close(self):
+        """Save before closing the window."""
+        self.save_todos()
+        self.root.destroy()
 
 
+def main():
+    root = tk.Tk()
+    app = TodoApp(root)
+    root.mainloop()
 
-    main = tkinter.Tk()
-
+if __name__ == "__main__":
+    main()
